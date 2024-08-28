@@ -4,23 +4,14 @@ import {
   Camera,
   useCameraDevice,
   useCameraPermission,
-  useFrameProcessor,
+  useCodeScanner,
 } from 'react-native-vision-camera';
-import {useBarcodeScanner} from 'react-native-vision-camera-barcodes-scanner';
-import {ScanBarcodeOptions} from 'react-native-vision-camera-barcodes-scanner/lib/typescript/src/types';
 
 function App() {
   const {hasPermission, requestPermission} = useCameraPermission();
   const device = useCameraDevice('back');
-  const options: ScanBarcodeOptions = ['ean_13'];
-  const {scanBarcodes} = useBarcodeScanner(options);
   const [cameraActive, setCameraActive] = useState(false);
-
-  const frameProcessor = useFrameProcessor(frame => {
-    'worklet';
-    const data = scanBarcodes(frame);
-    console.log(data, 'data');
-  }, []);
+  const [barcodeData, setBarcodeData] = useState(null);
 
   useEffect(() => {
     if (cameraActive) {
@@ -44,21 +35,29 @@ function App() {
     setCameraActive(false);
   };
 
+  const codeScanner = useCodeScanner({
+    codeTypes: ['qr', 'ean-13'],
+    onCodeScanned: codes => {
+      console.log(`Barcode: ${codes[0].value}`);
+      console.log(codes);
+    },
+  });
+
   return (
-    <View style={{flex: 1}}>
+    <View style={styles.container}>
       {cameraActive ? (
         device ? (
-          <>
+          <View style={styles.cameraContainer}>
             <Camera
               style={StyleSheet.absoluteFill}
               device={device}
-              isActive={cameraActive}
-              frameProcessor={frameProcessor}
+              isActive={true}
+              codeScanner={codeScanner}
             />
             <View style={styles.buttonContainer}>
               <Button onPress={onPressCloseCamera} title="Fechar Câmera" />
             </View>
-          </>
+          </View>
         ) : (
           <Text>No camera device available</Text>
         )
@@ -74,6 +73,16 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 20,
     alignSelf: 'center',
+  },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cameraContainer: {
+    width: '100%',
+    height: '60%',
+    position: 'relative',
   },
 });
 

@@ -11,7 +11,9 @@ function App() {
   const {hasPermission, requestPermission} = useCameraPermission();
   const device = useCameraDevice('back');
   const [cameraActive, setCameraActive] = useState(false);
-  const [barcodeData, setBarcodeData] = useState(null);
+  const [barcodeData, setBarcodeData] = useState<string | null>(null);
+
+  console.log('barcode: ', barcodeData);
 
   useEffect(() => {
     if (cameraActive) {
@@ -38,7 +40,12 @@ function App() {
   const codeScanner = useCodeScanner({
     codeTypes: ['qr', 'ean-13'],
     onCodeScanned: codes => {
-      console.log(`Barcode: ${codes[0].value}`);
+      if (codes.length > 0) {
+        const value = codes[0].value;
+        if (!!value) {
+          setBarcodeData(value);
+        }
+      }
       console.log(codes);
     },
   });
